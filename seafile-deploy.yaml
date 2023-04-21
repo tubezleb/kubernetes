@@ -1,0 +1,152 @@
+#Deploy Apps
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: seafile-db
+  name: seafile-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seafile-db
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: seafile-db
+    spec:
+      containers:
+      - image: mariadb:10.5
+        name: seafile-db
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: seafile-mysql-root-password
+                name: seafile-secrets
+          - name: MYSQL_LOG_CONSOLE
+            value: "true"
+        volumeMounts:
+          - name: seafile-mysql
+            mountPath: "/var/lib/mysql"
+      volumes:
+        - name: seafile-mysql
+          nfs:
+            server: 192.168.2.120
+            path: "/export/k8s-datas/containers/seafile/mysql"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: seafile-memcached
+  name: seafile-memcached
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seafile-memcached
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: seafile-memcached
+    spec:
+      containers:
+      - image: memcached:1.5.6
+        name: seafile-memcached
+        command:
+          - memcached
+          - -m
+          - "256"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: seafile
+  name: seafile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seafile
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: seafile
+    spec:
+      containers:
+      - image: seafileltd/seafile-mc:latest
+        name: seafile
+        env:
+          - name: DB_HOST
+            value: "seafile-db-service"
+          - name: DB_ROOT_PASSWD
+            valueFrom:
+              secretKeyRef:
+                key: seafile-mysql-root-password
+                name: seafile-secrets
+          - name: SEAFILE_ADMIN_EMAIL
+            valueFrom:
+              secretKeyRef:
+                key: seafile-admin-email
+                name: seafile-secrets
+          - name: SEAFILE_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: seafile-admin-password
+                name: seafile-secrets
+        volumeMounts:
+          - name: seafile-datas
+            mountPath: "/shared"
+      volumes:
+        - name: seafile-datas
+          nfs:
+            server: 192.168.2.120
+            path: "/export/k8s-datas/containers/seafile/datas"
+##Deploy Services
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seafile-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      name: http
+    - port: 8082
+      name: seafhttp
+  selector:
+    app: seafile 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seafile-db-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+  selector:
+    app: seafile-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached
+spec:
+  type: ClusterIP
+  ports:
+    - port: 11211
+  selector:
+    app: seafile-memcached

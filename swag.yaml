@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: swag
+  name: swag
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: swag
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: swag
+    spec:
+      containers:
+      - image: lscr.io/linuxserver/swag
+        name: swag
+        env:
+          - name: URL
+            valueFrom:
+              secretKeyRef:
+                key: swag-domain
+                name: swag-secrets
+          - name: SUBDOMAINS
+            value: "wildcard"
+          - name: VALIDATION
+            value: "dns"
+          - name: DNSPLUGIN
+            value: "ovh"
+          - name: ONLY_SUBDOMAINS
+            value: "true"
+        volumeMounts:
+          - name: swag
+            mountPath: "/config"
+      volumes:
+        - name: swag
+          nfs:
+            server: 192.168.2.120
+            path: "/export/k8s-datas/containers/swag"
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: swag-ingress
+spec:
+  selector:
+    app: swag
+  type: LoadBalancer
+  # loadBalancerIP is optional. MetalLB will automatically allocate an IP 
+  # from its pool if not specified. You can also specify one manually.
+  loadBalancerIP: 192.168.2.122
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
