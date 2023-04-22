@@ -6,5 +6,3 @@ sur le node <br />
 sudo snap refresh microk8s --channel 1.26/candidate <br /> 
 Apres MAJ: <br /> 
 kubectl uncordon $NOMDUNODE <br /> 
-
-
