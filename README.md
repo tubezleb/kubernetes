@@ -1,4 +1,4 @@
-# Commandes utiles
+# Commandes utiles pour Micro8ks
 
 Mettre a jour node Microk8s <br /> 
 kubectl drain $NOMDUNODE --ignore-daemonsets <br /> 
