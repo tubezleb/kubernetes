@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
+  namespace: seafile
   labels:
     app: seafile-db
   name: seafile-db
@@ -42,6 +43,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
+  namespace: seafile
   labels:
     app: seafile-memcached
   name: seafile-memcached
@@ -69,6 +71,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   creationTimestamp: null
+  namespace: seafile
   labels:
     app: seafile
   name: seafile
@@ -118,6 +121,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: seafile
   name: seafile-service
 spec:
   type: ClusterIP
@@ -132,6 +136,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: seafile
   name: seafile-db-service
 spec:
   type: ClusterIP
@@ -143,6 +148,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: seafile
   name: memcached
 spec:
   type: ClusterIP

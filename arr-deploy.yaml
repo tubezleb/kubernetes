@@ -1,0 +1,89 @@
+#Deploy Apps
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  namespace: arr
+  labels:
+    app: sonarr
+  name: sonarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarr
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: sonarr
+    spec:
+      volumes:
+      - name: sonarr-storage
+        persistentVolumeClaim:
+          claimName: nfs-pvc
+      containers:
+      - image: lscr.io/linuxserver/sonarr
+        name: sonarr
+        volumeMounts:
+          - name: sonarr-storage
+            mountPath: "/config"
+            subPath: "containers/sonarr"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: arr
+  name: sonarr-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8989
+  selector:
+    app: sonarr
+---
+#Deploy Apps
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  namespace: arr
+  labels:
+    app: radarr
+  name: radarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radarr
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: radarr
+    spec:
+      volumes:
+      - name: radarr-storage
+        persistentVolumeClaim:
+          claimName: nfs-pvc
+      containers:
+      - image: lscr.io/linuxserver/radarr
+        name: radarr
+        volumeMounts:
+          - name: radarr-storage
+            mountPath: "/config"
+            subPath: "containers/radarr"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: arr
+  name: radarr-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 7878
+  selector:
+    app: radarr
