@@ -1,0 +1,92 @@
+#Deploy Apps
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: transmission
+  name: transmission
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: transmission
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: transmission
+    spec:
+      volumes:
+      - name: transmission-storage
+        persistentVolumeClaim:
+          claimName: nfs-pvc
+      containers:
+      - image: haugene/transmission-openvpn
+        name: transmission
+        env:
+          - name: OPENVPN_PROVIDER
+            value: PIA
+          - name: OPENVPN_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: OPENVPN_USERNAME
+                name: transmission-secrets
+          - name: OPENVPN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: OPENVPN_PASSWORD
+                name: transmission-secrets
+          - name: OPENVPN_CONFIG
+            value: "ca_montreal,ca_ontario,ca_toronto"
+          - name: OPENVPN_OPTS
+            value: "--inactive 3600 --ping 10 --ping-exit 60"
+          - name: LOCAL_NETWORK
+            value: "192.168.2.0/24,10.1.0.0/16"
+          - name: TRANSMISSION_DOWNLOAD_DIR
+            value: "/downloads/transmission"
+          - name: TRANSMISSION_RPC_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: TRANSMISSION_RPC_USERNAME
+                name: transmission-secrets
+          - name: TRANSMISSION_RPC_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: TRANSMISSION_RPC_PASSWORD
+                name: transmission-secrets
+          - name: TRANSMISSION_RPC_AUTHENTICATION_REQUIRED
+            value: "true"
+          - name: TRANSMISSION_PORT_FORWARDING_ENABLED
+            value: "true"
+          - name: TRANSMISSION_SPEED_LIMIT_UP
+            value: "2000"
+          - name: TRANSMISSION_SPEED_LIMIT_UP_ENABLED
+            value: "true"
+          - name: ENABLE_UFW
+            value: "true"
+          - name: UFW_ALLOW_GW_NET
+            value: "true"                                    
+        volumeMounts:
+          - name: transmission-storage
+            mountPath: "/data"
+            subPath: "containers/transmission"
+          - name: transmission-storage
+            mountPath: "/downloads/transmission"
+            subPath: "torrents/downloads"
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9091
+  selector:
+    app: transmission

@@ -35,14 +35,13 @@ spec:
           - name: ONLY_SUBDOMAINS
             value: "true"
         volumeMounts:
-          - name: swag
+          - name: swag-storage
             mountPath: "/config"
+            subPath: "containers/swag"
       volumes:
-        - name: swag
-          nfs:
-            server: 192.168.2.120
-            path: "/export/k8s-datas/containers/swag"
-            
+      - name: swag-storage
+        persistentVolumeClaim:
+          claimName: nfs-pvc         
 ---
 apiVersion: v1
 kind: Service
