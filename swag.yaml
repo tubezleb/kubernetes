@@ -41,7 +41,7 @@ spec:
       volumes:
       - name: swag-storage
         persistentVolumeClaim:
-          claimName: nfs-pvc         
+          claimName: pvc-local
 ---
 apiVersion: v1
 kind: Service

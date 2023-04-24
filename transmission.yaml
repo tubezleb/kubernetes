@@ -21,7 +21,7 @@ spec:
       volumes:
       - name: transmission-storage
         persistentVolumeClaim:
-          claimName: nfs-pvc
+          claimName: pvc-local
       containers:
       - image: haugene/transmission-openvpn
         name: transmission
